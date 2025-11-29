@@ -189,6 +189,7 @@ ETHC_EXPORT int eth_abi_bytes32(struct eth_abi *abi, uint8_t *bytes);
  * @return `1` on success, `-1` otherwise.
  */
 ETHC_EXPORT int eth_abi_bytes(struct eth_abi *abi, uint8_t **bytes, size_t *len);
+ETHC_EXPORT int eth_abi_bytes_ext(struct eth_abi *abi, uint8_t **bytes, size_t *len, size_t revert_offset);
 
 /*!
  * @brief Converts ABI to hex string.

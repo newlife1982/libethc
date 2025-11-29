@@ -748,7 +748,7 @@ int eth_abi_bytes(struct eth_abi *abi, uint8_t **bytes, size_t *len) {
     ethc_abi_buf_pr64(dyoffset, cframebuf, cframebuf->offset);
     cframebuf->offset += ETH_ABI_WORD_SIZE;
 
-    printf("dyoffset=%d cframebuf->offset=%d\n", dyoffset, cframebuf->offset);
+    printf("dyoffset=%" PRIu64 " cframebuf->offset=%" PRIu64 "\n", dyoffset, cframebuf->offset);
 
     /* read the length */
     ethc_abi_buf_pr64(blen, cframebuf, dyoffset);

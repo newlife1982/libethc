@@ -769,6 +769,70 @@ int eth_abi_bytes(struct eth_abi *abi, uint8_t **bytes, size_t *len) {
   return -1;
 }
 
+int eth_abi_bytes(struct eth_abi *abi, uint8_t **bytes, size_t *len, size_t revert_offset) {
+  struct ethc_abi_frame *cframe;
+  struct ethc_abi_buf *cframebuf, *dybuf;
+  uint64_t dyoffset, blen;
+  uint8_t *buf;
+  size_t bsize;
+  
+  cframe = abi->cframe;
+  cframebuf = cframe->buf;
+  
+  if (abi->m == ETH_ABI_ENCODE) {
+    /* make the arbitrary length 32-byte aligned (16->32, 33->64) */
+    bsize = *len % ETH_ABI_WORD_SIZE
+      ? *len + (ETH_ABI_WORD_SIZE - (*len % ETH_ABI_WORD_SIZE))
+      : *len;
+
+    if (ethc_abi_buf_init(&dybuf, ETH_ABI_WORD_SIZE + bsize) < 0)
+      return -1;
+
+    /* store the declaration offset for the dynamic buffer */
+    dybuf->doffset = cframebuf->offset;
+
+    memset(&(cframebuf->buf[cframebuf->offset]), 0, ETH_ABI_WORD_SIZE);
+    cframebuf->offset += ETH_ABI_WORD_SIZE;
+    cframebuf->len += ETH_ABI_WORD_SIZE;
+
+    /* write the length */
+    ethc_abi_buf_pw64(dybuf, *len, 0);
+    dybuf->offset += ETH_ABI_WORD_SIZE;
+    dybuf->len += ETH_ABI_WORD_SIZE;
+
+    memcpy(&(dybuf->buf[dybuf->offset]), *bytes, *len);
+    dybuf->offset += bsize;
+    dybuf->len += bsize;
+
+    cframe->dybufs[cframe->dybuflen++] = dybuf;
+    return 1;
+  }
+  
+  if (abi->m == ETH_ABI_DECODE) {
+    /* read the offset */
+    ethc_abi_buf_pr64(dyoffset, cframebuf, cframebuf->offset);
+    cframebuf->offset += ETH_ABI_WORD_SIZE;
+
+    printf("dyoffset=%d cframebuf->offset=%d\n", (int)dyoffset, (int)cframebuf->offset);
+
+    /* read the length */
+    ethc_abi_buf_pr64(blen, cframebuf, dyoffset);
+
+    buf = (uint8_t*)malloc(blen);
+    if (buf == NULL)
+      return -1;
+
+    memcpy(buf, &(cframebuf->buf[cframebuf->offset + dyoffset - revert_offset * ETH_ABI_WORD_SIZE]), blen);
+    *bytes = buf;
+
+    if (len != NULL)
+      *len = blen;
+    return 1;
+  }
+  
+  return -1;
+}
+
 int eth_abi_from_hex(struct eth_abi *abi, char *hex, int len) {
   struct ethc_abi_frame *nframe;
 

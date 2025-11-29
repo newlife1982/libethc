@@ -769,7 +769,7 @@ int eth_abi_bytes(struct eth_abi *abi, uint8_t **bytes, size_t *len) {
   return -1;
 }
 
-int eth_abi_bytes(struct eth_abi *abi, uint8_t **bytes, size_t *len, size_t revert_offset) {
+int eth_abi_bytes_ext(struct eth_abi *abi, uint8_t **bytes, size_t *len, size_t revert_offset) {
   struct ethc_abi_frame *cframe;
   struct ethc_abi_buf *cframebuf, *dybuf;
   uint64_t dyoffset, blen;
